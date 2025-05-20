@@ -1,4 +1,6 @@
 /temp/
+/examples/
+
 # Logs
 logs
 *.log
