@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIDI-Controlled Shape Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      h1 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+      canvas {
+        border: 1px solid #ccc;
+        margin: 20px 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 90%;
+        max-width: 600px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .slider-container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      label {
+        margin-right: 10px;
+        width: 150px;
+        font-weight: bold;
+      }
+      input[type="range"] {
+        flex-grow: 1;
+      }
+      .value-display {
+        margin-left: 10px;
+        width: 50px;
+        text-align: right;
+      }
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        width: 100%;
+      }
+      .color-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        width: 100%;
+      }
+      input[type="color"] {
+        margin-left: 10px;
+      }
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #2980b9;
+      }
+      .button-group {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        width: 100%;
+      }
+      .midi-status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+        text-align: center;
+        width: 100%;
+      }
+      .midi-connected {
+        background-color: #2ecc71;
+        color: white;
+      }
+      .midi-disconnected {
+        background-color: #e74c3c;
+        color: white;
+      }
+      .midi-mapping {
+        margin-top: 20px;
+        width: 100%;
+      }
+      .midi-mapping h3 {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="midiStatus" class="midi-status midi-disconnected">
+      MIDI: Not Connected - Click "Enable MIDI" to connect your device
+    </div>
+
+    <canvas id="shapeCanvas" width="600" height="600"></canvas>
+
+    <div class="controls">
+      <div class="slider-container">
+        <label for="verticesSlider">Vertices (CC 1):</label>
+        <input type="range" id="verticesSlider" min="3" max="50" value="5" />
+        <span id="verticesValue" class="value-display">5</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="radiusSlider">Radius (CC 2):</label>
+        <input type="range" id="radiusSlider" min="50" max="280" value="200" />
+        <span id="radiusValue" class="value-display">200</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="rotationSlider">Rotation Speed (CC 3):</label>
+        <input
+          type="range"
+          id="rotationSlider"
+          min="0"
+          max="10"
+          step="0.1"
+          value="1"
+        />
+        <span id="rotationValue" class="value-display">1</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="pulseSlider">Pulse Intensity (CC 4):</label>
+        <input type="range" id="pulseSlider" min="0" max="50" value="0" />
+        <span id="pulseValue" class="value-display">0</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="lineWidthSlider">Line Width (CC 5):</label>
+        <input type="range" id="lineWidthSlider" min="1" max="20" value="2" />
+        <span id="lineWidthValue" class="value-display">2</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="vertexSizeSlider">Vertex Size (CC 6):</label>
+        <input type="range" id="vertexSizeSlider" min="0" max="20" value="5" />
+        <span id="vertexSizeValue" class="value-display">5</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="innerRadiusSlider">Inner Radius (CC 7):</label>
+        <input
+          type="range"
+          id="innerRadiusSlider"
+          min="0"
+          max="100"
+          value="0"
+        />
+        <span id="innerRadiusValue" class="value-display">0</span>
+      </div>
+
+      <div class="color-container">
+        <label for="lineColorPicker">Line Color (CC 8-10):</label>
+        <input type="color" id="lineColorPicker" value="#3498db" />
+      </div>
+
+      <div class="color-container">
+        <label for="fillColorPicker">Fill Color (CC 11-13):</label>
+        <input type="color" id="fillColorPicker" value="#3498db" />
+      </div>
+
+      <div class="slider-container">
+        <label for="opacitySlider">Fill Opacity (CC 14):</label>
+        <input type="range" id="opacitySlider" min="0" max="100" value="20" />
+        <span id="opacityValue" class="value-display">20%</span>
+      </div>
+
+      <div class="checkbox-container">
+        <label for="animateVertices">Animate Vertices (Note 60):</label>
+        <input type="checkbox" id="animateVertices" checked />
+      </div>
+
+      <div class="checkbox-container">
+        <label for="rainbowMode">Rainbow Mode (Note 61):</label>
+        <input type="checkbox" id="rainbowMode" />
+      </div>
+
+      <div class="checkbox-container">
+        <label for="starMode">Star Mode (Note 62):</label>
+        <input type="checkbox" id="starMode" />
+      </div>
+
+      <div class="checkbox-container">
+        <label for="trailMode">Trail Effect (Note 63):</label>
+        <input type="checkbox" id="trailMode" />
+      </div>
+
+      <div class="button-group">
+        <button id="enableMidiButton">Enable MIDI</button>
+        <button id="resetButton">Reset</button>
+        <button id="randomizeButton">Randomize</button>
+        <button id="toggleAnimationButton">Pause Animation</button>
+      </div>
+
+      <div class="midi-mapping">
+        <h3>MIDI Control Mapping</h3>
+        <table>
+          <tr>
+            <th>Parameter</th>
+            <th>MIDI Control</th>
+          </tr>
+          <tr>
+            <td>Vertices</td>
+            <td>CC 1</td>
+          </tr>
+          <tr>
+            <td>Radius</td>
+            <td>CC 2</td>
+          </tr>
+          <tr>
+            <td>Rotation Speed</td>
+            <td>CC 3</td>
+          </tr>
+          <tr>
+            <td>Pulse Intensity</td>
+            <td>CC 4</td>
+          </tr>
+          <tr>
+            <td>Line Width</td>
+            <td>CC 5</td>
+          </tr>
+          <tr>
+            <td>Vertex Size</td>
+            <td>CC 6</td>
+          </tr>
+          <tr>
+            <td>Inner Radius</td>
+            <td>CC 7</td>
+          </tr>
+          <tr>
+            <td>Line Color (R,G,B)</td>
+            <td>CC 8, 9, 10</td>
+          </tr>
+          <tr>
+            <td>Fill Color (R,G,B)</td>
+            <td>CC 11, 12, 13</td>
+          </tr>
+          <tr>
+            <td>Fill Opacity</td>
+            <td>CC 14</td>
+          </tr>
+          <tr>
+            <td>Animate Vertices</td>
+            <td>Note 60 (C3)</td>
+          </tr>
+          <tr>
+            <td>Rainbow Mode</td>
+            <td>Note 61 (C#3)</td>
+          </tr>
+          <tr>
+            <td>Star Mode</td>
+            <td>Note 62 (D3)</td>
+          </tr>
+          <tr>
+            <td>Trail Effect</td>
+            <td>Note 63 (D#3)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Get the canvas and its context
+      const canvas = document.getElementById("shapeCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Get all the controls
+      const verticesSlider = document.getElementById("verticesSlider");
+      const verticesValue = document.getElementById("verticesValue");
+      const radiusSlider = document.getElementById("radiusSlider");
+      const radiusValue = document.getElementById("radiusValue");
+      const rotationSlider = document.getElementById("rotationSlider");
+      const rotationValue = document.getElementById("rotationValue");
+      const pulseSlider = document.getElementById("pulseSlider");
+      const pulseValue = document.getElementById("pulseValue");
+      const lineWidthSlider = document.getElementById("lineWidthSlider");
+      const lineWidthValue = document.getElementById("lineWidthValue");
+      const vertexSizeSlider = document.getElementById("vertexSizeSlider");
+      const vertexSizeValue = document.getElementById("vertexSizeValue");
+      const innerRadiusSlider = document.getElementById("innerRadiusSlider");
+      const innerRadiusValue = document.getElementById("innerRadiusValue");
+      const lineColorPicker = document.getElementById("lineColorPicker");
+      const fillColorPicker = document.getElementById("fillColorPicker");
+      const opacitySlider = document.getElementById("opacitySlider");
+      const opacityValue = document.getElementById("opacityValue");
+      const animateVerticesCheckbox =
+        document.getElementById("animateVertices");
+      const rainbowModeCheckbox = document.getElementById("rainbowMode");
+      const starModeCheckbox = document.getElementById("starMode");
+      const trailModeCheckbox = document.getElementById("trailMode");
+      const resetButton = document.getElementById("resetButton");
+      const randomizeButton = document.getElementById("randomizeButton");
+      const toggleAnimationButton = document.getElementById(
+        "toggleAnimationButton",
+      );
+      const enableMidiButton = document.getElementById("enableMidiButton");
+      const midiStatus = document.getElementById("midiStatus");
+
+      // Animation variables
+      let animationId = null;
+      let rotation = 0;
+      let time = 0;
+      let animationRunning = true;
+      let hue = 0;
+
+      // MIDI variables
+      let midiAccess = null;
+      let midiConnected = false;
+      let lineColorRGB = { r: 52, g: 152, b: 219 }; // Default blue color
+      let fillColorRGB = { r: 52, g: 152, b: 219 }; // Default blue color
+
+      // Function to draw the shape
+      function drawShape() {
+        // Get all the current values
+        const numVertices = parseInt(verticesSlider.value);
+        const baseRadius = parseInt(radiusSlider.value);
+        const rotationSpeed = parseFloat(rotationSlider.value);
+        const pulseIntensity = parseInt(pulseSlider.value);
+        const lineWidth = parseInt(lineWidthSlider.value);
+        const vertexSize = parseInt(vertexSizeSlider.value);
+        const innerRadiusPercent = parseInt(innerRadiusSlider.value);
+        const lineColor = lineColorPicker.value;
+        const fillColor = fillColorPicker.value;
+        const opacity = parseInt(opacitySlider.value) / 100;
+        const animateVertices = animateVerticesCheckbox.checked;
+        const rainbowMode = rainbowModeCheckbox.checked;
+        const starMode = starModeCheckbox.checked;
+        const trailMode = trailModeCheckbox.checked;
+
+        // Calculate inner radius (for star mode)
+        const innerRadius = baseRadius * (innerRadiusPercent / 100);
+
+        // Apply pulse effect to radius
+        const pulseEffect =
+          pulseIntensity > 0 ? Math.sin(time * 0.05) * pulseIntensity : 0;
+        const radius = baseRadius + pulseEffect;
+
+        // Update rotation
+        if (animationRunning) {
+          rotation += rotationSpeed * 0.01;
+          time += 1;
+          hue = (hue + 0.5) % 360;
+        }
+
+        // Clear the canvas with trail effect
+        if (trailMode) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Set drawing styles
+        ctx.lineWidth = lineWidth;
+
+        if (rainbowMode) {
+          ctx.strokeStyle = `hsl(${hue}, 80%, 50%)`;
+          ctx.fillStyle = `hsla(${hue}, 80%, 50%, ${opacity})`;
+        } else {
+          ctx.strokeStyle = lineColor;
+          // Convert hex to rgba for fill
+          const r = parseInt(fillColor.slice(1, 3), 16);
+          const g = parseInt(fillColor.slice(3, 5), 16);
+          const b = parseInt(fillColor.slice(5, 7), 16);
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+
+        // Calculate center
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Begin drawing the shape
+        ctx.beginPath();
+
+        // Calculate and draw vertices
+        for (let i = 0; i < numVertices; i++) {
+          // Calculate angle with rotation
+          const angle = (i * 2 * Math.PI) / numVertices + rotation;
+
+          // Calculate vertex position with optional animation
+          let vertexRadius = radius;
+
+          if (animateVertices) {
+            vertexRadius += Math.sin(time * 0.03 + i * 0.5) * 10;
+          }
+
+          // For star mode, alternate between outer and inner radius
+          if (starMode) {
+            vertexRadius = i % 2 === 0 ? radius : innerRadius;
+          }
+
+          const x = centerX + vertexRadius * Math.cos(angle);
+          const y = centerY + vertexRadius * Math.sin(angle);
+
+          // Move to first vertex or draw line to subsequent vertices
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+
+        // Close the path
+        ctx.closePath();
+
+        // Fill and stroke the shape
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw vertices as points if vertex size > 0
+        if (vertexSize > 0) {
+          if (rainbowMode) {
+            ctx.fillStyle = `hsl(${(hue + 180) % 360}, 80%, 50%)`;
+          } else {
+            ctx.fillStyle = "#e74c3c";
+          }
+
+          for (let i = 0; i < numVertices; i++) {
+            const angle = (i * 2 * Math.PI) / numVertices + rotation;
+
+            let vertexRadius = radius;
+
+            if (animateVertices) {
+              vertexRadius += Math.sin(time * 0.03 + i * 0.5) * 10;
+            }
+
+            if (starMode) {
+              vertexRadius = i % 2 === 0 ? radius : innerRadius;
+            }
+
+            const x = centerX + vertexRadius * Math.cos(angle);
+            const y = centerY + vertexRadius * Math.sin(angle);
+
+            ctx.beginPath();
+            ctx.arc(x, y, vertexSize, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
+
+        // Request next frame if animation is running
+        if (animationRunning) {
+          animationId = requestAnimationFrame(drawShape);
+        }
+      }
+
+      // Function to update all display values
+      function updateDisplayValues() {
+        verticesValue.textContent = verticesSlider.value;
+        radiusValue.textContent = radiusSlider.value;
+        rotationValue.textContent = rotationSlider.value;
+        pulseValue.textContent = pulseSlider.value;
+        lineWidthValue.textContent = lineWidthSlider.value;
+        vertexSizeValue.textContent = vertexSizeSlider.value;
+        innerRadiusValue.textContent = innerRadiusSlider.value;
+        opacityValue.textContent = opacitySlider.value + "%";
+      }
+
+      // Function to reset all controls to default values
+      function resetControls() {
+        verticesSlider.value = 5;
+        radiusSlider.value = 200;
+        rotationSlider.value = 1;
+        pulseSlider.value = 0;
+        lineWidthSlider.value = 2;
+        vertexSizeSlider.value = 5;
+        innerRadiusSlider.value = 0;
+        lineColorPicker.value = "#3498db";
+        fillColorPicker.value = "#3498db";
+        opacitySlider.value = 20;
+        animateVerticesCheckbox.checked = true;
+        rainbowModeCheckbox.checked = false;
+        starModeCheckbox.checked = false;
+        trailModeCheckbox.checked = false;
+
+        // Reset RGB values
+        lineColorRGB = { r: 52, g: 152, b: 219 };
+        fillColorRGB = { r: 52, g: 152, b: 219 };
+
+        updateDisplayValues();
+      }
+
+      // Function to randomize all controls
+      function randomizeControls() {
+        verticesSlider.value = Math.floor(Math.random() * 48) + 3;
+        radiusSlider.value = Math.floor(Math.random() * 231) + 50;
+        rotationSlider.value = (Math.random() * 10).toFixed(1);
+        pulseSlider.value = Math.floor(Math.random() * 51);
+        lineWidthSlider.value = Math.floor(Math.random() * 20) + 1;
+        vertexSizeSlider.value = Math.floor(Math.random() * 21);
+        innerRadiusSlider.value = Math.floor(Math.random() * 101);
+
+        // Random colors
+        const randomLineColor = getRandomColor();
+        const randomFillColor = getRandomColor();
+
+        lineColorPicker.value = randomLineColor;
+        fillColorPicker.value = randomFillColor;
+
+        // Update RGB values
+        lineColorRGB = hexToRgb(randomLineColor);
+        fillColorRGB = hexToRgb(randomFillColor);
+
+        opacitySlider.value = Math.floor(Math.random() * 101);
+
+        // Random boolean values
+        animateVerticesCheckbox.checked = Math.random() > 0.5;
+        rainbowModeCheckbox.checked = Math.random() > 0.5;
+        starModeCheckbox.checked = Math.random() > 0.5;
+        trailModeCheckbox.checked = Math.random() > 0.5;
+
+        updateDisplayValues();
+      }
+
+      // Helper function to generate random color
+      function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
+
+      // Helper function to convert hex to RGB
+      function hexToRgb(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return { r, g, b };
+      }
+
+      // Helper function to convert RGB to hex
+      function rgbToHex(r, g, b) {
+        return (
+          "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+        );
+      }
+
+      // Function to toggle animation
+      function toggleAnimation() {
+        animationRunning = !animationRunning;
+
+        if (animationRunning) {
+          toggleAnimationButton.textContent = "Pause Animation";
+          drawShape();
+        } else {
+          toggleAnimationButton.textContent = "Resume Animation";
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+        }
+      }
+
+      // Function to initialize MIDI
+      function initializeMidi() {
+        if (navigator.requestMIDIAccess) {
+          navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+        } else {
+          midiStatus.textContent = "MIDI: Not supported in this browser";
+          console.log("WebMIDI is not supported in this browser.");
+        }
+      }
+
+      // Function called on successful MIDI access
+      function onMIDISuccess(access) {
+        midiAccess = access;
+        midiConnected = true;
+
+        // Update status
+        updateMidiStatus();
+
+        // Set up MIDI input listeners
+        const inputs = midiAccess.inputs.values();
+
+        for (
+          let input = inputs.next();
+          input && !input.done;
+          input = inputs.next()
+        ) {
+          input.value.onmidimessage = onMIDIMessage;
+        }
+
+        // Listen for connection changes
+        midiAccess.onstatechange = updateMidiStatus;
+      }
+
+      // Function called on MIDI access failure
+      function onMIDIFailure() {
+        midiConnected = false;
+        midiStatus.textContent = "MIDI: Failed to access MIDI devices";
+        midiStatus.className = "midi-status midi-disconnected";
+        console.log("Failed to access MIDI devices.");
+      }
+
+      // Function to update MIDI connection status
+      function updateMidiStatus() {
+        if (!midiAccess) return;
+
+        let connectedDevices = [];
+        let hasDevices = false;
+
+        // Check inputs
+        const inputs = midiAccess.inputs.values();
+        for (
+          let input = inputs.next();
+          input && !input.done;
+          input = inputs.next()
+        ) {
+          hasDevices = true;
+          if (input.value.state === "connected") {
+            connectedDevices.push(input.value.name || "Unknown Device");
+          }
+        }
+
+        if (hasDevices && connectedDevices.length > 0) {
+          midiStatus.textContent = `MIDI: Connected to ${connectedDevices.join(", ")}`;
+          midiStatus.className = "midi-status midi-connected";
+          midiConnected = true;
+        } else if (hasDevices) {
+          midiStatus.textContent = "MIDI: Devices found but not connected";
+          midiStatus.className = "midi-status midi-disconnected";
+          midiConnected = false;
+        } else {
+          midiStatus.textContent = "MIDI: No devices found";
+          midiStatus.className = "midi-status midi-disconnected";
+          midiConnected = false;
+        }
+      }
+
+      // Function to handle MIDI messages
+      function onMIDIMessage(message) {
+        const data = message.data;
+        const cmd = data[0] >> 4;
+        const channel = data[0] & 0xf;
+        const type = data[0] & 0xf0;
+        const note = data[1];
+        const velocity = data[2];
+
+        console.log({
+          data,
+          cmd,
+          channel,
+          type,
+          note,
+          velocity,
+        });
+
+        // CC messages (type 0xB0 = 176)
+        if (type === 176) {
+          const controllerNumber = note;
+          const value = velocity;
+
+          if (channel === 0) {
+            switch (controllerNumber) {
+              case 70: // Vertices
+                const verticesValue = Math.floor(
+                  mapValue(value, 0, 127, 3, 50),
+                );
+                verticesSlider.value = verticesValue;
+                verticesValue.textContent = verticesValue;
+                break;
+              case 71: // Radius
+                const radiusValue = Math.floor(
+                  mapValue(value, 0, 127, 50, 280),
+                );
+                radiusSlider.value = radiusValue;
+                radiusValue.textContent = radiusValue;
+                break;
+              case 72: // Rotation Speed
+                const rotationValue = mapValue(value, 0, 127, 0, 10).toFixed(1);
+                rotationSlider.value = rotationValue;
+                rotationValue.textContent = rotationValue;
+                break;
+              case 73: // Pulse Intensity
+                const pulseValue = Math.floor(mapValue(value, 0, 127, 0, 50));
+                pulseSlider.value = pulseValue;
+                pulseValue.textContent = pulseValue;
+                break;
+              case 74: // Line Width
+                const lineWidthValue = Math.floor(
+                  mapValue(value, 0, 127, 1, 20),
+                );
+                lineWidthSlider.value = lineWidthValue;
+                lineWidthValue.textContent = lineWidthValue;
+                break;
+              case 75: // Vertex Size
+                const vertexSizeValue = Math.floor(
+                  mapValue(value, 0, 127, 0, 20),
+                );
+                vertexSizeSlider.value = vertexSizeValue;
+                vertexSizeValue.textContent = vertexSizeValue;
+                break;
+              case 76: // Inner Radius
+                const innerRadiusValue = Math.floor(
+                  mapValue(value, 0, 127, 0, 100),
+                );
+                innerRadiusSlider.value = innerRadiusValue;
+                innerRadiusValue.textContent = innerRadiusValue;
+                break;
+              case 77: // Line Color R
+                lineColorRGB.r = Math.floor(mapValue(value, 0, 127, 0, 255));
+                lineColorPicker.value = rgbToHex(
+                  lineColorRGB.r,
+                  lineColorRGB.g,
+                  lineColorRGB.b,
+                );
+                break;
+            }
+          }
+
+          if (channel === 2) {
+            switch (controllerNumber) {
+              // Map CC values to parameters
+              case 70: // Line Color G
+                lineColorRGB.g = Math.floor(mapValue(value, 0, 127, 0, 255));
+                lineColorPicker.value = rgbToHex(
+                  lineColorRGB.r,
+                  lineColorRGB.g,
+                  lineColorRGB.b,
+                );
+                break;
+              case 71: // Line Color B
+                lineColorRGB.b = Math.floor(mapValue(value, 0, 127, 0, 255));
+                lineColorPicker.value = rgbToHex(
+                  lineColorRGB.r,
+                  lineColorRGB.g,
+                  lineColorRGB.b,
+                );
+                break;
+              case 72: // Fill Color R
+                fillColorRGB.r = Math.floor(mapValue(value, 0, 127, 0, 255));
+                fillColorPicker.value = rgbToHex(
+                  fillColorRGB.r,
+                  fillColorRGB.g,
+                  fillColorRGB.b,
+                );
+                break;
+              case 73: // Fill Color G
+                fillColorRGB.g = Math.floor(mapValue(value, 0, 127, 0, 255));
+                fillColorPicker.value = rgbToHex(
+                  fillColorRGB.r,
+                  fillColorRGB.g,
+                  fillColorRGB.b,
+                );
+                break;
+              case 74: // Fill Color B
+                fillColorRGB.b = Math.floor(mapValue(value, 0, 127, 0, 255));
+                fillColorPicker.value = rgbToHex(
+                  fillColorRGB.r,
+                  fillColorRGB.g,
+                  fillColorRGB.b,
+                );
+                break;
+              case 75: // Fill Opacity
+                const opacityValue = Math.floor(
+                  mapValue(value, 0, 127, 0, 100),
+                );
+                opacitySlider.value = opacityValue;
+                opacityValue.textContent = opacityValue + "%";
+                break;
+            }
+          }
+        }
+
+        // Note On messages (type 0x90 = 144)
+        if (type === 144 && velocity > 0) {
+          // Map note values to toggle parameters
+          switch (note) {
+            case 60: // C3 - Animate Vertices
+              animateVerticesCheckbox.checked =
+                !animateVerticesCheckbox.checked;
+              break;
+            case 61: // C#3 - Rainbow Mode
+              rainbowModeCheckbox.checked = !rainbowModeCheckbox.checked;
+              break;
+            case 62: // D3 - Star Mode
+              starModeCheckbox.checked = !starModeCheckbox.checked;
+              break;
+            case 63: // D#3 - Trail Effect
+              trailModeCheckbox.checked = !trailModeCheckbox.checked;
+              break;
+          }
+        }
+
+        updateDisplayValues();
+      }
+
+      // Helper function to map MIDI values to parameter ranges
+      function mapValue(value, inMin, inMax, outMin, outMax) {
+        return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+      }
+
+      // Add event listeners to all controls
+      verticesSlider.addEventListener("input", function () {
+        verticesValue.textContent = this.value;
+      });
+
+      radiusSlider.addEventListener("input", function () {
+        radiusValue.textContent = this.value;
+      });
+
+      rotationSlider.addEventListener("input", function () {
+        rotationValue.textContent = this.value;
+      });
+
+      pulseSlider.addEventListener("input", function () {
+        pulseValue.textContent = this.value;
+      });
+
+      lineWidthSlider.addEventListener("input", function () {
+        lineWidthValue.textContent = this.value;
+      });
+
+      vertexSizeSlider.addEventListener("input", function () {
+        vertexSizeValue.textContent = this.value;
+      });
+
+      innerRadiusSlider.addEventListener("input", function () {
+        innerRadiusValue.textContent = this.value;
+      });
+
+      opacitySlider.addEventListener("input", function () {
+        opacityValue.textContent = this.value + "%";
+      });
+
+      lineColorPicker.addEventListener("input", function () {
+        lineColorRGB = hexToRgb(this.value);
+      });
+
+      fillColorPicker.addEventListener("input", function () {
+        fillColorRGB = hexToRgb(this.value);
+      });
+
+      resetButton.addEventListener("click", resetControls);
+      randomizeButton.addEventListener("click", randomizeControls);
+      toggleAnimationButton.addEventListener("click", toggleAnimation);
+      enableMidiButton.addEventListener("click", initializeMidi);
+
+      // Initialize display values
+      updateDisplayValues();
+
+      // Start the animation
+      drawShape();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
