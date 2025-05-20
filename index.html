@@ -10,7 +10,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin: 20px;
         background-color: #f5f5f5;
         color: #333;
       }
@@ -23,17 +22,6 @@
         margin: 20px 0;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         background-color: #fff;
-      }
-      .controls {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 90%;
-        max-width: 600px;
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       .slider-container {
         width: 100%;
@@ -104,14 +92,6 @@
         background-color: #e74c3c;
         color: white;
       }
-      .midi-mapping {
-        margin-top: 20px;
-        width: 100%;
-      }
-      .midi-mapping h3 {
-        text-align: center;
-        margin-bottom: 10px;
-      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -135,169 +115,208 @@
 
     <canvas id="shapeCanvas" width="600" height="600"></canvas>
 
-    <div class="controls">
-      <div class="slider-container">
-        <label for="verticesSlider">Vertices (CC 1):</label>
-        <input type="range" id="verticesSlider" min="3" max="50" value="5" />
-        <span id="verticesValue" class="value-display">5</span>
-      </div>
+    <div class="controls w-full bg-white py-8 px-[12.5%]">
+      <div class="mx-auto grid grid-cols-2 gap-8">
+        <div class="flex flex-col gap-4">
+          <h3>MIDI Control Mapping</h3>
+          <div>
+            <div class="slider-container">
+              <label for="verticesSlider">Vertices (CC 1):</label>
+              <input
+                type="range"
+                id="verticesSlider"
+                min="3"
+                max="50"
+                value="5"
+              />
+              <span id="verticesValue" class="value-display">5</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="radiusSlider">Radius (CC 2):</label>
-        <input type="range" id="radiusSlider" min="50" max="280" value="200" />
-        <span id="radiusValue" class="value-display">200</span>
-      </div>
+            <div class="slider-container">
+              <label for="radiusSlider">Radius (CC 2):</label>
+              <input
+                type="range"
+                id="radiusSlider"
+                min="50"
+                max="280"
+                value="200"
+              />
+              <span id="radiusValue" class="value-display">200</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="rotationSlider">Rotation Speed (CC 3):</label>
-        <input
-          type="range"
-          id="rotationSlider"
-          min="0"
-          max="10"
-          step="0.1"
-          value="1"
-        />
-        <span id="rotationValue" class="value-display">1</span>
-      </div>
+            <div class="slider-container">
+              <label for="rotationSlider">Rotation Speed (CC 3):</label>
+              <input
+                type="range"
+                id="rotationSlider"
+                min="0"
+                max="10"
+                step="0.1"
+                value="1"
+              />
+              <span id="rotationValue" class="value-display">1</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="pulseSlider">Pulse Intensity (CC 4):</label>
-        <input type="range" id="pulseSlider" min="0" max="50" value="0" />
-        <span id="pulseValue" class="value-display">0</span>
-      </div>
+            <div class="slider-container">
+              <label for="pulseSlider">Pulse Intensity (CC 4):</label>
+              <input type="range" id="pulseSlider" min="0" max="50" value="0" />
+              <span id="pulseValue" class="value-display">0</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="lineWidthSlider">Line Width (CC 5):</label>
-        <input type="range" id="lineWidthSlider" min="1" max="20" value="2" />
-        <span id="lineWidthValue" class="value-display">2</span>
-      </div>
+            <div class="slider-container">
+              <label for="lineWidthSlider">Line Width (CC 5):</label>
+              <input
+                type="range"
+                id="lineWidthSlider"
+                min="1"
+                max="20"
+                value="2"
+              />
+              <span id="lineWidthValue" class="value-display">2</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="vertexSizeSlider">Vertex Size (CC 6):</label>
-        <input type="range" id="vertexSizeSlider" min="0" max="20" value="5" />
-        <span id="vertexSizeValue" class="value-display">5</span>
-      </div>
+            <div class="slider-container">
+              <label for="vertexSizeSlider">Vertex Size (CC 6):</label>
+              <input
+                type="range"
+                id="vertexSizeSlider"
+                min="0"
+                max="20"
+                value="5"
+              />
+              <span id="vertexSizeValue" class="value-display">5</span>
+            </div>
 
-      <div class="slider-container">
-        <label for="innerRadiusSlider">Inner Radius (CC 7):</label>
-        <input
-          type="range"
-          id="innerRadiusSlider"
-          min="0"
-          max="100"
-          value="0"
-        />
-        <span id="innerRadiusValue" class="value-display">0</span>
-      </div>
+            <div class="slider-container">
+              <label for="innerRadiusSlider">Inner Radius (CC 7):</label>
+              <input
+                type="range"
+                id="innerRadiusSlider"
+                min="0"
+                max="100"
+                value="0"
+              />
+              <span id="innerRadiusValue" class="value-display">0</span>
+            </div>
 
-      <div class="color-container">
-        <label for="lineColorPicker">Line Color (CC 8-10):</label>
-        <input type="color" id="lineColorPicker" value="#3498db" />
-      </div>
+            <div class="color-container">
+              <label for="lineColorPicker">Line Color (CC 8-10):</label>
+              <input type="color" id="lineColorPicker" value="#3498db" />
+            </div>
 
-      <div class="color-container">
-        <label for="fillColorPicker">Fill Color (CC 11-13):</label>
-        <input type="color" id="fillColorPicker" value="#3498db" />
-      </div>
+            <div class="color-container">
+              <label for="fillColorPicker">Fill Color (CC 11-13):</label>
+              <input type="color" id="fillColorPicker" value="#3498db" />
+            </div>
 
-      <div class="slider-container">
-        <label for="opacitySlider">Fill Opacity (CC 14):</label>
-        <input type="range" id="opacitySlider" min="0" max="100" value="20" />
-        <span id="opacityValue" class="value-display">20%</span>
-      </div>
+            <div class="slider-container">
+              <label for="opacitySlider">Fill Opacity (CC 14):</label>
+              <input
+                type="range"
+                id="opacitySlider"
+                min="0"
+                max="100"
+                value="20"
+              />
+              <span id="opacityValue" class="value-display">20%</span>
+            </div>
 
-      <div class="checkbox-container">
-        <label for="animateVertices">Animate Vertices (Note 60):</label>
-        <input type="checkbox" id="animateVertices" checked />
-      </div>
+            <div class="checkbox-container">
+              <label for="animateVertices">Animate Vertices (Note 60):</label>
+              <input type="checkbox" id="animateVertices" checked />
+            </div>
 
-      <div class="checkbox-container">
-        <label for="rainbowMode">Rainbow Mode (Note 61):</label>
-        <input type="checkbox" id="rainbowMode" />
-      </div>
+            <div class="checkbox-container">
+              <label for="rainbowMode">Rainbow Mode (Note 61):</label>
+              <input type="checkbox" id="rainbowMode" />
+            </div>
 
-      <div class="checkbox-container">
-        <label for="starMode">Star Mode (Note 62):</label>
-        <input type="checkbox" id="starMode" />
-      </div>
+            <div class="checkbox-container">
+              <label for="starMode">Star Mode (Note 62):</label>
+              <input type="checkbox" id="starMode" />
+            </div>
 
-      <div class="checkbox-container">
-        <label for="trailMode">Trail Effect (Note 63):</label>
-        <input type="checkbox" id="trailMode" />
-      </div>
+            <div class="checkbox-container">
+              <label for="trailMode">Trail Effect (Note 63):</label>
+              <input type="checkbox" id="trailMode" />
+            </div>
 
-      <div class="button-group">
-        <button id="enableMidiButton">Enable MIDI</button>
-        <button id="resetButton">Reset</button>
-        <button id="randomizeButton">Randomize</button>
-        <button id="toggleAnimationButton">Pause Animation</button>
-      </div>
+            <div class="button-group">
+              <button id="enableMidiButton">Enable MIDI</button>
+              <button id="resetButton">Reset</button>
+              <button id="randomizeButton">Randomize</button>
+              <button id="toggleAnimationButton">Pause Animation</button>
+            </div>
+          </div>
+        </div>
 
-      <div class="midi-mapping">
-        <h3>MIDI Control Mapping</h3>
-        <table>
-          <tr>
-            <th>Parameter</th>
-            <th>MIDI Control</th>
-          </tr>
-          <tr>
-            <td>Vertices</td>
-            <td>CC 1</td>
-          </tr>
-          <tr>
-            <td>Radius</td>
-            <td>CC 2</td>
-          </tr>
-          <tr>
-            <td>Rotation Speed</td>
-            <td>CC 3</td>
-          </tr>
-          <tr>
-            <td>Pulse Intensity</td>
-            <td>CC 4</td>
-          </tr>
-          <tr>
-            <td>Line Width</td>
-            <td>CC 5</td>
-          </tr>
-          <tr>
-            <td>Vertex Size</td>
-            <td>CC 6</td>
-          </tr>
-          <tr>
-            <td>Inner Radius</td>
-            <td>CC 7</td>
-          </tr>
-          <tr>
-            <td>Line Color (R,G,B)</td>
-            <td>CC 8, 9, 10</td>
-          </tr>
-          <tr>
-            <td>Fill Color (R,G,B)</td>
-            <td>CC 11, 12, 13</td>
-          </tr>
-          <tr>
-            <td>Fill Opacity</td>
-            <td>CC 14</td>
-          </tr>
-          <tr>
-            <td>Animate Vertices</td>
-            <td>Note 60 (C3)</td>
-          </tr>
-          <tr>
-            <td>Rainbow Mode</td>
-            <td>Note 61 (C#3)</td>
-          </tr>
-          <tr>
-            <td>Star Mode</td>
-            <td>Note 62 (D3)</td>
-          </tr>
-          <tr>
-            <td>Trail Effect</td>
-            <td>Note 63 (D#3)</td>
-          </tr>
-        </table>
+        <div class="flex flex-col gap-4">
+          <h3>MIDI Control Mapping</h3>
+          <div class="midi-mapping">
+            <table>
+              <tr>
+                <th>Parameter</th>
+                <th>MIDI Control</th>
+              </tr>
+              <tr>
+                <td>Vertices</td>
+                <td>CC 1</td>
+              </tr>
+              <tr>
+                <td>Radius</td>
+                <td>CC 2</td>
+              </tr>
+              <tr>
+                <td>Rotation Speed</td>
+                <td>CC 3</td>
+              </tr>
+              <tr>
+                <td>Pulse Intensity</td>
+                <td>CC 4</td>
+              </tr>
+              <tr>
+                <td>Line Width</td>
+                <td>CC 5</td>
+              </tr>
+              <tr>
+                <td>Vertex Size</td>
+                <td>CC 6</td>
+              </tr>
+              <tr>
+                <td>Inner Radius</td>
+                <td>CC 7</td>
+              </tr>
+              <tr>
+                <td>Line Color (R,G,B)</td>
+                <td>CC 8, 9, 10</td>
+              </tr>
+              <tr>
+                <td>Fill Color (R,G,B)</td>
+                <td>CC 11, 12, 13</td>
+              </tr>
+              <tr>
+                <td>Fill Opacity</td>
+                <td>CC 14</td>
+              </tr>
+              <tr>
+                <td>Animate Vertices</td>
+                <td>Note 60 (C3)</td>
+              </tr>
+              <tr>
+                <td>Rainbow Mode</td>
+                <td>Note 61 (C#3)</td>
+              </tr>
+              <tr>
+                <td>Star Mode</td>
+                <td>Note 62 (D3)</td>
+              </tr>
+              <tr>
+                <td>Trail Effect</td>
+                <td>Note 63 (D#3)</td>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -605,6 +624,7 @@
 
       // Function called on successful MIDI access
       function onMIDISuccess(access) {
+          console.log(access);
         midiAccess = access;
         midiConnected = true;
 
